@@ -139,7 +139,7 @@ public class PreliminaryTests {
         controller.GetNext();
         var gameUnit = controller.GetNext();
 
-        Assertions.assertThrows(NoSuchElementException.class, gameUnit::get);
+        Assertions.assertTrue(gameUnit.isPresent());
     }
 
     @Test

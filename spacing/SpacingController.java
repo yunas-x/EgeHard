@@ -49,16 +49,18 @@ public class SpacingController
      * @return items for spacing game. Returns empty container if load is scarce or empty
      */
     public Optional<SpacingGameUnit> GetNext() throws InterruptedException {
-        if (gameEntries == null || gameEntries.size() < quantityOfQuestions) {
+        if (isGameOverOrBroken()) {
             return Optional.empty();
         }
 
-        var spacingGameEntries = new ArrayList<SpacingGameEntry>(4);
+        var spacingGameEntries = new ArrayList<SpacingGameEntry>();
 
         for (int i = 0; i < quantityOfQuestions; i++) {
-            getReloader().moveEntriesPointerAndReload();
+
+            getReloader().reloadIfRequired();
             getReloader().joinReloadsIfExists();
-            spacingGameEntries.add((SpacingGameEntry) gameEntries.get(getPointer().getIndex()));
+            spacingGameEntries.add((SpacingGameEntry) gameEntries.pop());
+
         }
 
         currentGameUnit = new SpacingGameUnit(spacingGameEntries);

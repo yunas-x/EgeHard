@@ -6,8 +6,6 @@ import org.example.score.AnswerStats;
 import org.example.standard.interfaces.WordLoader;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -24,7 +22,7 @@ public abstract class StandardController<TAnswer> {
      * Game Entries for a game
      */
     @Getter
-    protected List<GameEntry<TAnswer>> gameEntries = new ArrayList<>();
+    protected Stack<GameEntry<TAnswer>> gameEntries = new Stack<>();
 
     private final WordLoader<TAnswer> loader;
 
@@ -37,8 +35,6 @@ public abstract class StandardController<TAnswer> {
     @Getter
     private final Reloader reloader;
 
-    @Getter
-    private final EntryPointer pointer;
 
     /**
      * On game over sends stats
@@ -54,10 +50,8 @@ public abstract class StandardController<TAnswer> {
     public boolean isGameOverOrBroken() {
 
         return gameEntries == null
-                || gameEntries.isEmpty()
-                || pointer.getIndex() == -1
-                || pointer.getIndex() >= gameEntries.size()
-                || !reloader.reloaded;
+                || (gameEntries.isEmpty()
+                && !reloader.reloaded);
     }
 
 
@@ -67,7 +61,6 @@ public abstract class StandardController<TAnswer> {
      */
     public StandardController(WordLoader<TAnswer> loader) {
         stats = new AnswerStats();
-        pointer = new EntryPointer();
         this.loader = loader;
         reloader = new Reloader();
         loadWords();
@@ -108,26 +101,18 @@ public abstract class StandardController<TAnswer> {
          */
         protected Thread reloads;
 
-        /**
-         * Moves game entries pointer one step forward
-         * Reloads gameEntries if they are over
-         */
-        public void moveEntriesPointerAndReload() throws IndexOutOfBoundsException {
-            if (!reloaded) {
-                throw new IndexOutOfBoundsException("Кончились задачи");
-            }
-
-            StandardController.this.getPointer().movePointer();
-            reloadIfRequired();
-        }
 
         /**
          * Reloads if null or dead
          */
-        private void reloadIfRequired() {
+        public void reloadIfRequired() throws InterruptedException {
+
+            if (!reloaded) {
+                throw new IndexOutOfBoundsException("Кончились задачи");
+            }
+
             if ((reloads == null || !reloads.isAlive())
-                    && StandardController.this.gameEntries.size()
-                    - StandardController.this.getPointer().getIndex() <= 2) {
+                    && StandardController.this.gameEntries.size() <= 2) {
                 reloads = new Thread(StandardController.this::loadWords);
                 reloads.start();
             }
@@ -138,31 +123,13 @@ public abstract class StandardController<TAnswer> {
          * @throws InterruptedException
          */
         public void joinReloadsIfExists() throws InterruptedException {
-            if (StandardController.this.getPointer().getIndex()
-                    == StandardController.this.gameEntries.size()
-                    && reloads != null)
-
+            if (StandardController.this.gameEntries.isEmpty() && reloads != null)
                 reloads.join();
         }
 
 
     }
 
-    protected static class EntryPointer {
-
-        /**
-         * Pointer for selecting entries
-         */
-        @Getter
-        private int index = -1;
-
-        /**
-         * Adds one to index
-         */
-        private void movePointer() {
-            index++;
-        }
-    }
 
 }
 
