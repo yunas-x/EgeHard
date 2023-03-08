@@ -8,6 +8,7 @@ import org.example.standard.interfaces.WordLoader;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -51,7 +52,7 @@ public abstract class StandardController<TAnswer> {
 
         return gameEntries == null
                 || (gameEntries.isEmpty()
-                && !reloader.reloaded);
+                && !reloader.reloaded.get());
     }
 
 
@@ -81,7 +82,7 @@ public abstract class StandardController<TAnswer> {
             gameEntries.addAll(loader.Load());
         }
         catch (Exception e) {
-            reloader.reloaded = false;
+            reloader.reloaded.compareAndSet(true, false);
         }
     }
 
@@ -94,37 +95,39 @@ public abstract class StandardController<TAnswer> {
         /**
          * If reload is successful
          */
-        private boolean reloaded = true;
+        private volatile AtomicBoolean reloaded = new AtomicBoolean(true);
 
         /**
          * Async reload
          */
-        protected Thread reloads;
+        private Thread reload;
+
 
 
         /**
          * Reloads if null or dead
          */
-        public void reloadIfRequired() throws InterruptedException {
+        public synchronized void reloadIfRequired() throws InterruptedException {
 
-            if (!reloaded) {
+            if (!reloaded.get()) {
                 throw new IndexOutOfBoundsException("Кончились задачи");
             }
 
-            if ((reloads == null || !reloads.isAlive())
+            if ((reload == null || !reload.isAlive())
                     && StandardController.this.gameEntries.size() <= 2) {
-                reloads = new Thread(StandardController.this::loadWords);
-                reloads.start();
+                reload = new Thread(StandardController.this::loadWords);
+                reload.start();
             }
         }
 
         /**
          * Wait if not reloaded
          * @throws InterruptedException
-         */
-        public void joinReloadsIfExists() throws InterruptedException {
-            if (StandardController.this.gameEntries.isEmpty() && reloads != null)
-                reloads.join();
+         *
+        public synchronized void joinReloadsIfExists() throws InterruptedException {
+            if (StandardController.this.gameEntries.isEmpty() && reload != null)
+                reload.join();
+
         }
 
 
