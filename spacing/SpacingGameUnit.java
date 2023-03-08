@@ -2,12 +2,14 @@ package org.example.spacing;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.ToString;
 import org.example.standard.abstractclasses.GameEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@ToString
 public class SpacingGameUnit {
 
     @Getter(AccessLevel.PUBLIC)
@@ -23,6 +25,7 @@ public class SpacingGameUnit {
      * @return true on set, false on fail
      */
     private boolean setSpacingGameEntries(ArrayList<SpacingGameEntry> gameEntryArrayList) {
+
         if (gameEntryArrayList == null || gameEntryArrayList.size() < SpacingController.quantityOfQuestions)
             return false;
         else
@@ -79,4 +82,6 @@ public class SpacingGameUnit {
         else
             throw new IllegalArgumentException("gameEntries are broken");
     }
+
+
 }

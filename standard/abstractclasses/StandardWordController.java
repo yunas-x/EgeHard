@@ -29,10 +29,10 @@ public abstract class StandardWordController<TAnswer>
             return Optional.empty();
         }
 
-        getReloader().moveEntriesPointerAndReload();
+        getReloader().reloadIfRequired();
         getReloader().joinReloadsIfExists();
 
-        return Optional.ofNullable(gameEntries.get(getPointer().getIndex()));
+        return Optional.ofNullable(gameEntries.pop());
     }
 
     /**
@@ -51,7 +51,7 @@ public abstract class StandardWordController<TAnswer>
 
             getStats().totalAnswersGiven++;
 
-            boolean result = gameEntries.get(getPointer().getIndex()).getCorrectAnswer().equals(answer);
+            boolean result = gameEntries.pop().getCorrectAnswer().equals(answer);
 
             if (result)
                 getStats().correctAnswersGiven++;

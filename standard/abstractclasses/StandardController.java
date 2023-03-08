@@ -103,6 +103,7 @@ public abstract class StandardController<TAnswer> {
         private Thread reload;
 
 
+
         /**
          * Reloads if null or dead
          */
@@ -122,10 +123,11 @@ public abstract class StandardController<TAnswer> {
         /**
          * Wait if not reloaded
          * @throws InterruptedException
-         */
+         *
         public synchronized void joinReloadsIfExists() throws InterruptedException {
             if (StandardController.this.gameEntries.isEmpty() && reload != null)
                 reload.join();
+
         }
 
 
